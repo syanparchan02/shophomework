@@ -1,138 +1,56 @@
-// import 'package:dio/dio.dart';
-// import 'package:shophomework/model/product.dart';
-// import 'package:shophomework/model/user.dart';
-
-// class ApiService {
-//   final String userurl = 'https://fakestoreapi.com/users';
-//   final String producturl = 'https://fakestoreapi.in/api/products';
-
-//   Dio dio = Dio(
-//     BaseOptions(
-//       baseUrl: 'https://fakestoreapi.com/',
-//       connectTimeout: const Duration(seconds: 60),
-//       receiveTimeout: const Duration(seconds: 10),
-//     ),
-//   );
-
-//   Future<List<UserModel>> getUsers() async {
-//     try {
-//       final response = await dio.get(userurl);
-
-//       final udataList = response.data as List;
-
-//       return udataList.map((e) => UserModel.fromJson(e)).toList();
-//     } on DioException catch (e) {
-//       if (e.type == DioExceptionType.connectionTimeout) {
-//         throw Exception('Connection timed out. Please check your internet.');
-//       } else {
-//         throw Exception('Failed to fetch users: ${e.message}');
-//       }
-//     }
-//   }
-
-//   // Future<List<ProductModel>> getAllProducts() async {
-//   //   try {
-//   //     final response = await dio.get(producturl);
-
-//   //     final pdataList = response.data as List;
-
-//   //     return pdataList.map((e) => ProductModel.fromJson(e)).toList();
-//   //   } on DioException catch (e) {
-//   //     if (e.type == DioExceptionType.connectionTimeout) {
-//   //       throw Exception('Connection timed out. Please check your internet.');
-//   //     } else {
-//   //       throw Exception('Failed to fetch product: ${e.message}');
-//   //     }
-//   //   }
-//   // }
-//   Future<List<ProductModel>> getAllProducts() async {
-//     try {
-//       final response = await dio.get("https://fakestoreapi.in/api/products");
-
-//       final data = response.data;
-
-//       // If the API returns { "products": [...] }
-//       final pdataList = data['products'] as List;
-
-//       return pdataList.map((e) => ProductModel.fromJson(e)).toList();
-//     } on DioException catch (e) {
-//       if (e.type == DioExceptionType.connectionTimeout) {
-//         throw Exception('Connection timed out. Please check your internet.');
-//       } else {
-//         throw Exception('Failed to fetch product: ${e.message}');
-//       }
-//     }
-//   }
-// }
-
 import 'package:dio/dio.dart';
-import 'package:shophomework/model/product.dart';
-import 'package:shophomework/model/user.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  final String userRoute = 'users';
-  final String productRoute = 'products';
-
-  Dio dio = Dio(
+  final Dio dio = Dio(
     BaseOptions(
-      baseUrl: 'https://fakestoreapi.com/',
+      baseUrl: 'https://dummyjson.com',
       connectTimeout: const Duration(seconds: 60),
       receiveTimeout: const Duration(seconds: 10),
     ),
   );
 
-  Future<List<UserModel>> getUsers() async {
+  Future<String?> login(String username, String password) async {
     try {
-      final response = await dio.get(userRoute);
-      final udataList = response.data as List;
-      return udataList.map((e) => UserModel.fromJson(e)).toList();
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionTimeout) {
-        throw Exception('Connection timed out. Please check your internet.');
-      } else {
-        throw Exception('Failed to fetch users: ${e.message}');
+      final response = await dio.post(
+        '/auth/login',
+        data: {'username': username, 'password': password},
+      );
+
+      // print('Login Response: ${response.data}');
+
+      if (response.statusCode == 200 && response.data['accessToken'] != null) {
+        String token = response.data['accessToken'];
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('token', token);
+        return token;
       }
+    } catch (e) {
+      print("Login error: $e");
     }
+    return null;
   }
 
-  Future<List<ProductModel>> getAllProducts() async {
+  Future<List<dynamic>?> getProducts() async {
     try {
-      final response = await dio.get(productRoute);
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
 
-      // fakestoreapi.com returns a List directly
-      final pdataList = response.data as List;
+      if (token == null) throw Exception("No token found");
 
-      return pdataList.map((e) => ProductModel.fromJson(e)).toList();
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionTimeout) {
-        throw Exception('Connection timed out. Please check your internet.');
-      } else {
-        throw Exception('Failed to fetch product: ${e.message}');
+      final response = await dio.get(
+        '/products',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      print('Product Response: ${response.data}');
+
+      if (response.statusCode == 200) {
+        return response.data['products'];
       }
+    } catch (e) {
+      print("Product fetch error: $e");
     }
+    return null;
   }
-
-  // Future<List<ProductModel>> getAllProducts() async {
-  //   try {
-  //     final response = await dio.get(producturl);
-
-  //     final data = response.data;
-
-  //     if (data is List) {
-  //       return data.map((e) => ProductModel.fromJson(e)).toList();
-  //     } else if (data is Map && data['products'] is List) {
-  //       return (data['products'] as List)
-  //           .map((e) => ProductModel.fromJson(e))
-  //           .toList();
-  //     } else {
-  //       throw Exception('Unexpected API response format');
-  //     }
-  //   } on DioException catch (e) {
-  //     if (e.type == DioExceptionType.connectionTimeout) {
-  //       throw Exception('Connection timed out. Please check your internet.');
-  //     } else {
-  //       throw Exception('Failed to fetch product: ${e.message}');
-  //     }
-  //   }
-  // }
 }

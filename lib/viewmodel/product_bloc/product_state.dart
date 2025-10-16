@@ -1,33 +1,51 @@
+// import 'package:equatable/equatable.dart';
+// import 'package:shophomework/model/product.dart';
+
+// abstract class ProductState extends Equatable {
+//   @override
+//   List<Object?> get props => [];
+// }
+
+// class ProductInitial extends ProductState {}
+
+// class ProductLoading extends ProductState {}
+
+// class ProductLoaded extends ProductState {
+//   final List<dynamic> products;
+//   ProductLoaded(this.products);
+// }
+
+// class ProductError extends ProductState {
+//   final String message;
+//   ProductError(this.message);
+// }
+
 import 'package:equatable/equatable.dart';
 import 'package:shophomework/model/product.dart';
-import 'package:shophomework/model/user.dart';
 
 abstract class ProductState extends Equatable {
   @override
-  // TODO: implement props
   List<Object?> get props => [];
 }
 
-class ProdcutInitialState extends ProductState {
-  ProdcutInitialState();
-}
+class ProductInitial extends ProductState {}
 
-class ProductLoadingState extends ProductState {
-  ProductLoadingState();
-}
+class ProductLoading extends ProductState {}
 
-class ProductLoadedState extends ProductState {
-  final List<ProductModel> plist;
-  ProductLoadedState(this.plist);
+class ProductLoaded extends ProductState {
+  final List<ProductModel> products;
+
+  ProductLoaded(this.products);
 
   @override
-  List<Object?> get props => [plist];
+  List<Object?> get props => [products];
 }
 
-class ProductErrorState extends ProductState {
-  final String error;
-  ProductErrorState(this.error);
+class ProductError extends ProductState {
+  final String message;
+
+  ProductError(this.message);
 
   @override
-  List<Object?> get props => [error];
+  List<Object?> get props => [message];
 }

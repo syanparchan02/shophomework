@@ -3,22 +3,22 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:shophomework/viewmodel/favorite_provider.dart';
+import 'package:shophomework/viewmodel/login_bloc/login_bloc.dart';
+import 'package:shophomework/viewmodel/login_bloc/login_event.dart';
+import 'package:shophomework/viewmodel/login_bloc/login_state.dart';
 import 'package:shophomework/viewmodel/product_bloc/product_bloc.dart';
 import 'package:shophomework/viewmodel/product_bloc/product_even.dart';
 import 'repository/api_service.dart';
-import 'viewmodel/user_bloc/user_bloc.dart';
-import 'viewmodel/user_bloc/user_even.dart';
+
 import 'router.dart';
 
 void main() {
   runApp(
     MultiProvider(
       providers: [
+        BlocProvider(create: (context) => LoginBloc(ApiService())),
         BlocProvider(
-          create: (context) => UserBloc(ApiService())..add(ULoadEvent()),
-        ),
-        BlocProvider(
-          create: (context) => ProductBloc(ApiService())..add(PLoadEvent()),
+          create: (context) => ProductBloc(ApiService())..add(LoadProducts()),
         ),
         ChangeNotifierProvider(
           create: (context) => FavoriteProvider()..loadFavorites(),

@@ -14,10 +14,10 @@ final goRouterProvider = Provider<GoRouter>(
         builder: (context, state) =>
             Homescreen(username: state.uri.queryParameters['username'] ?? ''),
       ),
-      GoRoute(
-        path: '/search',
-        builder: (context, state) => const Searchscreen(),
-      ),
+      // GoRoute(
+      //   path: '/search',
+      //   builder: (context, state) => const Searchscreen(),
+      // ),
     ],
   ),
 );
