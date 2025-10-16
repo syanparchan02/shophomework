@@ -19,14 +19,13 @@ class HomeContent extends StatefulWidget {
 class HomeContentState extends State<HomeContent> {
   final List<String> categories = const [
     "All",
-    "Jewelery",
-    "Electronics",
-    "Women's Clothing",
-    "Men's Clothing",
+    "Beauty",
+    "Fragrances",
+    "Groceries",
   ];
   String selectedCategory = "All";
 
-  List<ProductModel> _getFilteredProducts(List<ProductModel> allProducts) {
+  List<ProductModel> _getFilteredProducts(allProducts) {
     if (selectedCategory == "All") {
       return allProducts;
     }
@@ -43,13 +42,13 @@ class HomeContentState extends State<HomeContent> {
   Widget build(BuildContext context) {
     return BlocBuilder<ProductBloc, ProductState>(
       builder: (context, state) {
-        if (state is ProductLoadingState) {
+        if (state is ProductLoading) {
           return const Center(child: CircularProgressIndicator());
-        } else if (state is ProductErrorState) {
-          return Center(child: Text('Error: ${state.error}'));
-        } else if (state is ProductLoadedState) {
+        } else if (state is ProductError) {
+          return Center(child: Text('Error: ${state.message}'));
+        } else if (state is ProductLoaded) {
           final List<ProductModel> filteredProducts = _getFilteredProducts(
-            state.plist,
+            state.products,
           );
 
           return SingleChildScrollView(
@@ -163,11 +162,11 @@ class HomeContentState extends State<HomeContent> {
                                         decoration: BoxDecoration(
                                           color: const Color(0xFFE0E0E0),
                                           image:
-                                              (product.image != null &&
-                                                  product.image!.isNotEmpty)
+                                              (product.images != null &&
+                                                  product.images!.isNotEmpty)
                                               ? DecorationImage(
                                                   image: NetworkImage(
-                                                    product.image!,
+                                                    product.images!.first,
                                                   ),
                                                   fit: BoxFit.fitHeight,
                                                 )
@@ -178,8 +177,8 @@ class HomeContentState extends State<HomeContent> {
                                               ),
                                         ),
                                         child:
-                                            (product.image == null ||
-                                                product.image!.isEmpty)
+                                            (product.images == null ||
+                                                product.images!.isEmpty)
                                             ? const Center(
                                                 child: Text(
                                                   "No Image",
@@ -229,7 +228,7 @@ class HomeContentState extends State<HomeContent> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          product.category ?? "No Category",
+                                          product.brand ?? "No brand",
                                           style: const TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 12,

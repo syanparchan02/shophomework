@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shophomework/model/user.dart';
-import 'package:shophomework/screens/customclipper.dart';
 
-import 'package:shophomework/viewmodel/user_bloc/user_bloc.dart';
-import 'package:shophomework/viewmodel/user_bloc/user_state.dart';
+import 'package:shophomework/screens/customclipper.dart';
+import 'package:shophomework/viewmodel/login_bloc/login_bloc.dart';
+import 'package:shophomework/viewmodel/login_bloc/login_event.dart';
+import 'package:shophomework/viewmodel/login_bloc/login_state.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,207 +15,200 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-@override
 class _LoginScreenState extends State<LoginScreen> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
-
   final _formKey = GlobalKey<FormState>();
-
   bool isObsercure = true;
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocBuilder<UserBloc, UserState>(
-      builder: (context, state) {
-        if (state is UserInitialState) {
-          return const Center(child: Text('Welcome to User Screen'));
-        } else if (state is UserLoadingState) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (state is UserLoadedState) {
-          List<UserModel> ulist = state.userlist;
-          return Scaffold(
-            body: SingleChildScrollView(
-              child: Column(
-                children: [
-                  ClipPath(
-                    clipper: MyCustomClipper(),
-                    child: Container(height: 200, color: Colors.pink),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 30),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            'login',
-                            style: TextStyle(fontSize: 30, color: Colors.pink),
-                          ),
-                          SizedBox(height: 30),
-                          TextFormField(
-                            controller: emailController,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter your email';
-                              }
-                              return null;
-                            },
-                            keyboardType: TextInputType.name,
-                            decoration: InputDecoration(
-                              prefixIcon: Icon(Icons.email_outlined),
-                              hintText: "yourmail@gamil.com",
-                            ),
-                          ),
-                          SizedBox(height: 20),
-                          TextFormField(
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter your password';
-                              }
+    return BlocListener<LoginBloc, LoginState>(
+      listener: (context, state) {
+        if (state is LoginSuccess) {
+          final username = emailController.text.trim();
+          context.go('/home?username=$username');
+        } else if (state is LoginFailure) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Error'),
+              content: Text(state.message),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
+        }
+      },
+      child: BlocBuilder<LoginBloc, LoginState>(
+        builder: (context, state) {
+          if (state is LoginInitial) {
+            return _buildLoginUI(context, false);
+          } else if (state is LoginLoading) {
+            return _buildLoginUI(context, true);
+          } else if (state is LoginSuccess) {
+            return _buildLoginUI(context, false);
+          } else if (state is LoginFailure) {
+            return _buildLoginUI(context, false);
+          }
+          return _buildLoginUI(context, false);
+        },
+      ),
+    );
+  }
 
-                              return null;
-                            },
-                            controller: passwordController,
-                            obscureText: isObsercure,
-
-                            decoration: InputDecoration(
-                              prefixIcon: Icon(Icons.lock_open_outlined),
-                              hintText: 'Enter your password',
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  isObsercure
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    isObsercure = !isObsercure;
-                                  });
-                                },
-                              ),
-                            ),
+  Widget _buildLoginUI(BuildContext context, bool isLoading) {
+    return Scaffold(
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            ClipPath(
+              clipper: MyCustomClipper(),
+              child: Container(height: 200, color: Colors.pink),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 30),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    const Text(
+                      'login',
+                      style: TextStyle(fontSize: 30, color: Colors.pink),
+                    ),
+                    const SizedBox(height: 30),
+                    TextFormField(
+                      controller: emailController,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your email';
+                        }
+                        return null;
+                      },
+                      decoration: const InputDecoration(
+                        prefixIcon: Icon(Icons.email_outlined),
+                        hintText: "yourmail@gmail.com",
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    TextFormField(
+                      controller: passwordController,
+                      obscureText: isObsercure,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your password';
+                        }
+                        return null;
+                      },
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.lock_open_outlined),
+                        hintText: 'Enter your password',
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            isObsercure
+                                ? Icons.visibility_off
+                                : Icons.visibility,
                           ),
-                          SizedBox(height: 5),
-                          Text(
-                            "forgot password?",
-                            style: TextStyle(color: Colors.pink),
-                          ),
-                          SizedBox(height: 50),
-                          Center(
-                            child: SizedBox(
-                              width: 250,
-
-                              child: ElevatedButton(
-                                onPressed: () {
+                          onPressed: () {
+                            setState(() {
+                              isObsercure = !isObsercure;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 50),
+                    Center(
+                      child: SizedBox(
+                        width: 250,
+                        child: ElevatedButton(
+                          onPressed: isLoading
+                              ? null
+                              : () {
                                   if (_formKey.currentState!.validate()) {
-                                    UserModel? matchedUser;
-                                    for (var user in ulist) {
-                                      if (user.email == emailController.text &&
-                                          user.password ==
-                                              passwordController.text) {
-                                        matchedUser = user;
-                                        break;
-                                      }
-                                    }
+                                    final username = emailController.text
+                                        .trim();
+                                    final password = passwordController.text
+                                        .trim();
 
-                                    if (matchedUser != null) {
-                                      context.go(
-                                        '/home?username=${matchedUser.username}',
-                                      );
-                                    } else {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Invalid email or password',
-                                          ),
-                                        ),
-                                      );
-                                    }
+                                    context.read<LoginBloc>().add(
+                                      LoginButtonPressed(username, password),
+                                    );
                                   }
                                 },
-
-                                child: Text('Login'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.pink,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  padding: EdgeInsets.symmetric(vertical: 15),
-                                ),
-                              ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.pink,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
                             ),
+                            padding: const EdgeInsets.symmetric(vertical: 15),
                           ),
-                          SizedBox(height: 50),
-                          Center(
-                            child: Column(
-                              children: [
-                                Text("Join with"),
-                                SizedBox(height: 15),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 15,
-                                      backgroundColor: Colors.pink,
-                                      child: FaIcon(
-                                        FontAwesomeIcons.google,
-                                        color: Colors.white,
-                                        size: 15,
-                                      ),
-                                    ),
-                                    SizedBox(width: 10),
-                                    CircleAvatar(
-                                      radius: 15,
-                                      backgroundColor: Colors.pink,
-                                      child: FaIcon(
-                                        FontAwesomeIcons.twitter,
-                                        color: Colors.white,
-                                        size: 15,
-                                      ),
-                                    ),
-                                    SizedBox(width: 10),
-                                    CircleAvatar(
-                                      radius: 15,
-                                      backgroundColor: Colors.pink,
-                                      child: FaIcon(
-                                        FontAwesomeIcons.linkedinIn,
-                                        color: Colors.white,
-                                        size: 15,
-                                      ),
-                                    ),
-                                    SizedBox(width: 10),
-                                    CircleAvatar(
-                                      radius: 15,
-                                      backgroundColor: Colors.pink,
-                                      child: FaIcon(
-                                        FontAwesomeIcons.facebook,
-                                        color: Colors.white,
-                                        size: 15,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                          child: isLoading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text('Login'),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 50),
+                    Center(
+                      child: Column(
+                        children: [
+                          const Text("Join with"),
+                          const SizedBox(height: 15),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: const [
+                              _SocialIcon(icon: FontAwesomeIcons.google),
+                              SizedBox(width: 10),
+                              _SocialIcon(icon: FontAwesomeIcons.twitter),
+                              SizedBox(width: 10),
+                              _SocialIcon(icon: FontAwesomeIcons.linkedinIn),
+                              SizedBox(width: 10),
+                              _SocialIcon(icon: FontAwesomeIcons.facebook),
+                            ],
                           ),
                         ],
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          );
-        } else if (state is UserErrorState) {
-          return Center(child: Text('Error: ${state.error}'));
-        }
-        return const SizedBox.shrink();
-      },
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SocialIcon extends StatelessWidget {
+  final IconData icon;
+  const _SocialIcon({required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return CircleAvatar(
+      radius: 15,
+      backgroundColor: Colors.pink,
+      child: FaIcon(icon, color: Colors.white, size: 15),
     );
   }
 }

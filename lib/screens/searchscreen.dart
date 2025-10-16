@@ -18,7 +18,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => ProductBloc(ApiService())..add(PLoadEvent()),
+      create: (context) => ProductBloc(ApiService())..add(LoadProducts()),
+
       child: const MaterialApp(
         debugShowCheckedModeBanner: false,
         home: Searchscreen(),
@@ -54,15 +55,15 @@ class _SearchscreenState extends State<Searchscreen> {
       ),
       body: BlocBuilder<ProductBloc, ProductState>(
         builder: (context, state) {
-          if (state is ProductLoadingState) {
+          if (state is ProductLoading) {
             return const Center(child: CircularProgressIndicator());
-          } else if (state is ProductErrorState) {
-            return Center(child: Text('Error: ${state.error}'));
-          } else if (state is ProductLoadedState) {
-            final filteredList = state.plist
+          } else if (state is ProductError) {
+            return Center(child: Text('Error: ${state.message}'));
+          } else if (state is ProductLoaded) {
+            final filteredList = state.products
                 .where(
                   (product) =>
-                      (product.category ?? "").toLowerCase().contains(
+                      (product.brand ?? "").toLowerCase().contains(
                         searchQuery.toLowerCase(),
                       ) ||
                       (product.price
@@ -164,11 +165,11 @@ class _SearchscreenState extends State<Searchscreen> {
 
                                       decoration: BoxDecoration(
                                         image:
-                                            product.image != null &&
-                                                product.image!.isNotEmpty
+                                            product.images != null &&
+                                                product.images!.isNotEmpty
                                             ? DecorationImage(
                                                 image: NetworkImage(
-                                                  product.image!,
+                                                  product.images!.first,
                                                 ),
                                                 fit: BoxFit.fitHeight,
                                                 onError: (error, stackTrace) {
@@ -223,7 +224,7 @@ class _SearchscreenState extends State<Searchscreen> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        product.category ?? "No Brand",
+                                        product.brand ?? "No Brand",
                                         style: const TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 14,
